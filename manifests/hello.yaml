@@ -1,0 +1,184 @@
+---
+name: hello
+userdata:
+  type: local
+  path: examples/scripts/userdata.sh
+
+autoscaling: &autoscaling_policy
+  - name: scale_in
+    adjustment_type: ChangeInCapacity
+    scaling_adjustment: -1
+    cooldown: 60
+  - name: scale_out
+    adjustment_type: ChangeInCapacity
+    scaling_adjustment: 1
+    cooldown: 180
+
+alarms: &autoscaling_alarms
+  - name: scale_out_on_util
+    namespace: AWS/EC2
+    metric: CPUUtilization
+    statistic: Average
+    comparison: GreaterThanOrEqualToThreshold
+    threshold: 50
+    period: 120
+    evaluation_periods: 2
+    alarm_actions:
+      - scale_out
+  - name: scale_in_on_util
+    namespace: AWS/EC2
+    metric: CPUUtilization
+    statistic: Average
+    comparison: LessThanOrEqualToThreshold
+    threshold: 30
+    period: 300
+    evaluation_periods: 3
+    alarm_actions:
+      - scale_in
+
+# Tags should be like "key=value"
+tags:
+  - project=test
+  - repo=hello-deploy
+
+stacks:
+  - stack: artd
+    polling_interval: 30s
+    # account alias
+    account: art-id
+    # environment variable
+    env: dev
+    # assume_role for deployment
+    assume_role: ""
+    # Replacement type
+    replacement_type: BlueGreen
+    # IAM instance profile, not IAM role
+    iam_instance_profile: 'app-hello-profile'
+
+    # Stack specific tags
+    ansible_tags: all
+    tags:
+      - stack-name=artd
+      - test=test
+
+    # EBS Optimized
+    ebs_optimized: true
+
+    # instance_market_options is for spot usage
+    # You only can choose spot as market_type.
+    # If you want to set customized stop options, then please write spot_options correctly.
+    #instance_market_options:
+    #  market_type: spot
+    #  spot_options:
+    #    block_duration_minutes: 180
+    #    instance_interruption_behavior: terminate # terminate / stop / hibernate
+    #    max_price: 0.
+    #    spot_instance_type: one-time # one-time or persistent
+
+
+    # MixedInstancesPolicy
+    # You can set autoscaling mixedInstancePolicy to use on demand and spot instances together.
+    # if mixed_instance_policy is set, then `instance_market_options` will be ignored.
+    mixed_instances_policy:
+      enabled: false
+
+      # instance type list to override the instance types in launch template.
+      override_instance_types:
+        - c5.large
+        - c5.xlarge
+
+      # Proportion of on-demand instances.
+      # By default, this value  will be 100 which means no spot instance.
+      on_demand_percentage: 20
+
+      # spot_allocation_strategy means in what strategy you want to allocate spot instances.
+      # options could be either `lowest-price` or `capacity-optimized`.
+      # by default, `low-price` strategy will be applied.
+      spot_allocation_strategy: lowest-price
+
+      # The number of spot instances pool.
+      # This will be set among instance types in `override` fields
+      # This will be valid only if the `spot_allocation_strategy` is low-price.
+      spot_instance_pools: 3
+
+      # Spot price.
+      # By default, on-demand price will be automatically applied.
+      spot_max_price: 0.3
+
+    # block_devices is the list of ebs volumes you can use for ec2
+    # device_name is required
+    # If you do not set volume_size, it would be 16.
+    # If you do not set volume_type, it would be gp2.
+    block_devices:
+      - device_name: /dev/xvda
+        volume_size: 20
+        volume_type: "gp2"
+#      - device_name: /dev/xvdb
+#        volume_type: "st1"
+#        volume_size: 500
+
+    # capacity
+    capacity:
+      min: 1
+      max: 2
+      desired: 1
+
+    # autoscaling means scaling policy of autoscaling group
+    # You can find format in autoscaling block upside
+    autoscaling: *autoscaling_policy
+
+    # alarms means cloudwatch alarms for triggering autoscaling scaling policy
+    # You can find format in alarms block upside
+    alarms: *autoscaling_alarms
+
+    # lifecycle callbacks
+    lifecycle_callbacks:
+      pre_terminate_past_cluster:
+        - service hello stop
+
+    # list of region
+    # deployer will concurrently deploy across the region
+    regions:
+      - region: ap-northeast-2
+
+        # instance type
+        instance_type: t3.medium
+
+        # ssh_key for instances
+        ssh_key: test-master-key
+
+        # ami_id
+        # You can override this value via command line `--ami`
+        ami_id: ami-01288945bd24ed49a
+
+        # Whether you want to use public subnet or not
+        # By Default, deployer selects private subnets
+        # If you want to use public subnet, then you should set this value to ture.
+        use_public_subnets: true
+
+        # You can use VPC id(vpc-xxx)
+        # If you specify the name of VPC, then deployer will find the VPC id with it.
+        # In this case, only one VPC should exist.
+        vpc: vpc-artd_apnortheast2
+
+        # You can use security group id(sg-xxx)
+        # If you specify the name of security group, then deployer will find the security group id with it.
+        # In this case, only one security group should exist
+        security_groups:
+          - hello-artd_apnortheast2
+          - default-artd_apnortheast2
+
+        # You can use healthcheck target group
+        healthcheck_target_group: hello-artdapne2-ext
+
+        # If no availability zones specified, then all availability zones are selected by default.
+        # If you want all availability zones, then please remove availability_zones key.
+        availability_zones:
+          - ap-northeast-2a
+          - ap-northeast-2b
+          - ap-northeast-2c
+
+        # list of target groups.
+        # The target group in the healthcheck_target_group should be included here.
+        target_groups:
+          - hello-artdapne2-ext
