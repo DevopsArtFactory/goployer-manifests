@@ -5,7 +5,7 @@ run-as: art
 env:
   variables:
     HOME: /home/art
-    SERVICE_NAME: ""
+    SERVICE_NAME: "hello"
     SLACK_CHANNEL: ""
     USERDATA_PATH: scripts/userdata.sh
     REGION: "ap-northeast-2"
@@ -24,6 +24,6 @@ phases:
   build:
     commands:
       - echo "Start Deployment"
-      - /usr/local/bin/goployer deploy ${ASSUME_ROLE} --manifest=deployments/${SERVICE_NAME}.yml --stack=${STACK} --region=${REGION} --log-level=debug --release-notes "${RELEASE_NOTES}" --polling-interval=30s
+      - /usr/local/bin/goployer deploy ${ASSUME_ROLE} --manifest=manifests/${SERVICE_NAME}.yml --stack=${STACK} --region=${REGION} --log-level=debug --release-notes "${RELEASE_NOTES}" --polling-interval=30s
 #  post_build:
 #    commands:
