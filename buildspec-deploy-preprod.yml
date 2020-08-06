@@ -5,7 +5,7 @@ run-as: art
 env:
   variables:
     HOME: /home/art
-    SERVICE_NAME: ""
+    SERVICE_NAME: "hello"
     SLACK_CHANNEL: ""
     USERDATA_PATH: scripts/userdata.sh
     REGION: "ap-northeast-2"
