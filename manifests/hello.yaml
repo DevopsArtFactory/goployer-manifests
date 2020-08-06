@@ -188,3 +188,79 @@ stacks:
         # The target group in the healthcheck_target_group should be included here.
         target_groups:
           - hello-artdapne2-ext
+
+  - stack: artp
+    polling_interval: 30s
+    account: prod
+    env: prod
+    assume_role: ""
+    replacement_type: BlueGreen
+    iam_instance_profile: 'app-hello-profile'
+    ansible_tags: all
+    tags:
+      - stack-name=artp
+      - test=test
+    ebs_optimized: true
+
+    #instance_market_options:
+    #  market_type: spot
+    #  spot_options:
+    #    block_duration_minutes: 180
+    #    instance_interruption_behavior: terminate # terminate / stop / hibernate
+    #    max_price: 0.
+    #    spot_instance_type: one-time # one-time or persistent
+
+
+    mixed_instances_policy:
+      enabled: false
+      override_instance_types:
+        - c5.large
+        - c5.xlarge
+      on_demand_percentage: 20
+      spot_allocation_strategy: lowest-price
+      spot_instance_pools: 3
+      spot_max_price: 0.3
+
+    block_devices:
+      - device_name: /dev/xvda
+        volume_size: 8
+        volume_type: "gp2"
+
+    # capacity
+    capacity:
+      min: 1
+      max: 2
+      desired: 1
+
+    autoscaling: *autoscaling_policy
+    alarms: *autoscaling_alarms
+    lifecycle_callbacks:
+      pre_terminate_past_cluster:
+        - service hello stop
+
+    # list of region
+    regions:
+      - region: ap-northeast-2
+        instance_type: t3.medium
+        ssh_key: art-prod-master
+        ami_id: ami-01288945bd24ed49a
+        use_public_subnets: true
+        vpc: vpc-artp_apnortheast2
+        security_groups:
+          - hello-artp_apnortheast2
+          - default-artp_apnortheast2
+
+        # You can use healthcheck target group
+        healthcheck_target_group: hello-artpapne2-ext
+
+        # If no availability zones specified, then all availability zones are selected by default.
+        # If you want all availability zones, then please remove availability_zones key.
+        availability_zones:
+          - ap-northeast-2a
+          - ap-northeast-2b
+          - ap-northeast-2c
+
+        # list of target groups.
+        # The target group in the healthcheck_target_group should be included here.
+        target_groups:
+          - hello-artpapne2-ext
