@@ -1,0 +1,29 @@
+version: 0.2
+
+run-as: art
+
+env:
+  variables:
+    HOME: /home/art
+    SERVICE_NAME: ""
+    SLACK_CHANNEL: ""
+    USERDATA_PATH: scripts/userdata.sh
+    REGION: "ap-northeast-2"
+    STACK: "artp"
+    BASE_AMI_ID: ""
+    RELEASE_NOTE: "Hello DevOps"
+  parameter-store:
+    SLACK_TOKEN: "/CodeBuild/SLACK_TOKEN"
+    SLACK_WEBHOOK_URL: "/CodeBuild/SLACK_WEBHOOK_URL"
+
+phases:
+  install:
+    commands:
+      - curl -Lo goployer https://goployer.s3.ap-northeast-2.amazonaws.com/releases/2.0.2/goployer-linux-amd64
+      - sudo install goployer /usr/local/bin/
+  build:
+    commands:
+      - echo "Start Deployment"
+      - /usr/local/bin/goployer deploy ${ASSUME_ROLE} --manifest=deployments/${SERVICE_NAME}.yml --stack=${STACK} --region=${REGION} --log-level=debug --release-notes "${RELEASE_NOTES}" --polling-interval=30s
+#  post_build:
+#    commands:
