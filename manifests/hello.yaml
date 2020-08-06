@@ -2,7 +2,7 @@
 name: hello
 userdata:
   type: local
-  path: examples/scripts/userdata.sh
+  path: scripts/userdata.sh
 
 autoscaling: &autoscaling_policy
   - name: scale_in
@@ -43,15 +43,21 @@ tags:
 
 stacks:
   - stack: artd
+
     polling_interval: 30s
+
     # account alias
-    account: art-id
+    account: dev
+
     # environment variable
     env: dev
+
     # assume_role for deployment
     assume_role: ""
+
     # Replacement type
     replacement_type: BlueGreen
+
     # IAM instance profile, not IAM role
     iam_instance_profile: 'app-hello-profile'
 
@@ -111,11 +117,11 @@ stacks:
     # If you do not set volume_type, it would be gp2.
     block_devices:
       - device_name: /dev/xvda
-        volume_size: 20
+        volume_size: 100
         volume_type: "gp2"
-#      - device_name: /dev/xvdb
-#        volume_type: "st1"
-#        volume_size: 500
+      - device_name: /dev/xvdb
+        volume_type: "st1"
+        volume_size: 500
 
     # capacity
     capacity:
