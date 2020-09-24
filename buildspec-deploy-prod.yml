@@ -11,6 +11,7 @@ env:
     REGION: "ap-northeast-2"
     STACK: "artp"
     BASE_AMI_ID: ""
+    ASSUME_ROLE: "--assume-role=arn:aws:iam::002202845208:role/deployment"
     RELEASE_NOTE: "Hello DevOps"
   parameter-store:
     SLACK_TOKEN: "/CodeBuild/SLACK_TOKEN"

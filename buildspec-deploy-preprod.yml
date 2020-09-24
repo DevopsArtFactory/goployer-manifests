@@ -19,11 +19,11 @@ env:
 phases:
   install:
     commands:
-      - curl -Lo goployer https://goployer.s3.ap-northeast-2.amazonaws.com/edge/latest/goployer-linux-amd64
+      - curl -Lo goployer https://goployer.s3.ap-northeast-2.amazonaws.com/experimental/latest/goployer-linux-amd64
       - sudo install goployer /usr/local/bin/
   build:
     commands:
       - echo "Start Deployment"
-      - /usr/local/bin/goployer deploy ${ASSUME_ROLE} --manifest=manifests/${SERVICE_NAME}.yaml --stack=${STACK} --region=${REGION} --log-level=debug --release-notes "${RELEASE_NOTES}" --polling-interval=30s
+      - /usr/local/bin/goployer deploy ${ASSUME_ROLE} --manifest=manifests/${SERVICE_NAME}.yaml --stack=${STACK} --region=${REGION} --log-level=debug --release-notes "${RELEASE_NOTES}" --polling-interval=20s --slack-off
 #  post_build:
 #    commands:
